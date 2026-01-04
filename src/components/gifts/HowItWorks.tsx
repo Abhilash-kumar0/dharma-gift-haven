@@ -3,17 +3,27 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AppStackParamList } from '../../navigation/types'; // adjust path if needed
 import EnvelopeWorkflow from './EnvelopeWorkflow';
 
-const HowItWorks = () => {
-    const navigation = useNavigation();
+// Define navigation type
+type HowItWorksNavProp = NativeStackNavigationProp<AppStackParamList, 'CreateEnvelope'>;
+
+const HowItWorks: React.FC = () => {
+    const navigation = useNavigation<HowItWorksNavProp>();
 
     return (
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <MaterialCommunityIcons name="information" size={20} color="#800000" style={styles.icon} />
-                <Text style={styles.heading}>How It Works </Text>
+                <MaterialCommunityIcons
+                    name="information"
+                    size={20}
+                    color="#800000"
+                    style={styles.icon}
+                />
+                <Text style={styles.heading}>How It Works</Text>
             </View>
 
             {/* Workflow component */}
@@ -26,7 +36,12 @@ const HowItWorks = () => {
                     onPress={() => navigation.navigate('CreateEnvelope')}
                 >
                     <Text style={styles.buttonText}>Create Your First Envelope</Text>
-                    <MaterialCommunityIcons name="arrow-right" size={16} color="#fff" style={{ marginLeft: 4 }} />
+                    <MaterialCommunityIcons
+                        name="arrow-right"
+                        size={16}
+                        color="#fff"
+                        style={{ marginLeft: 4 }}
+                    />
                 </TouchableOpacity>
             </View>
         </View>

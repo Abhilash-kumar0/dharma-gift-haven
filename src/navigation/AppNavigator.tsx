@@ -9,6 +9,7 @@ import BankDetailsScreen from "../screens/Profile/BankDetailsScreen";
 import TransactionHistoryScreen from "../screens/Profile/TransactionHistoryScreen";
 import KycVerificationScreen from "../screens/Profile/KycVerification";
 import EnvelopeView from "../screens/EnvelopeView";
+import CreateEnvelopeScreen from "../screens/CreateEnvelopeScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -58,12 +59,22 @@ export default function AppNavigator() {
                 component={KycVerificationScreen}
                 options={{ title: "Kyc Verification" }} // 👈 header title
             />
-                        {/* 👇 Add your new screen here */}
+            {/* 👇 Add your new screen here */}
             <Stack.Screen
                 name="EnvelopeView"
                 component={EnvelopeView}
                 options={{ title: "Envelope" }}
             />
+            <Stack.Screen
+                name="CreateEnvelope"
+                component={CreateEnvelopeScreen}
+                options={{ headerShown: false, title: "Create Envelope" }}
+            />
+            {/* <Stack.Screen
+                name="EnvelopePayment"
+                component={EnvelopePaymentScreen}
+                options={{ title: "Payment" }}
+            /> */}
         </Stack.Navigator>
     );
 }

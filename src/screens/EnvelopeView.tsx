@@ -1,169 +1,287 @@
-// src/screens/EnvelopeView.tsx
-import React, { useState, useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import Toast from "react-native-toast-message";
-import AppLayout from "../components/AppLayout";
+import React, { useRef, useState } from "react";
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Animated,
+    StyleSheet,
+    Dimensions,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { Dialog, Portal, Button, Provider as PaperProvider } from "react-native-paper";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
-// Mock envelopeData - replace with real API if needed
-const envelopeData = [
-    { id: 1, sender: "Ramesh", message: "Happy Birthday 🎉" },
-    { id: 2, sender: "Sita", message: "Best Wishes 🙏" },
-];
+const { width } = Dimensions.get("window");
 
 const EnvelopeView = () => {
-    const route = useRoute<any>();
     const navigation = useNavigation();
-    const { id } = route.params || {}; // coming from navigate()
+    const { params } = useRoute();
+    const envelopeId = params?.id ?? 0;
 
+    // Example static envelope data - replace with actual data fetch
+    const envelopeData = [
+        {
+            id: 0,
+            sender: "Sharma Family",
+            message:
+                "Wishing you a lifetime of love and happiness on your special day. Congratulations!",
+            amount: "₹2,100",
+        },
+        // add more envelopes here
+    ];
+
+    const envelope = envelopeData.find((env) => env.id === envelopeId) || envelopeData[0];
+
+    const [opened, setOpened] = useState(false);
     const [showDialog, setShowDialog] = useState(false);
     const [thanksSent, setThanksSent] = useState(false);
 
-    // Envelope lookup
-    const envelope = useMemo(() => {
-        return envelopeData.find((env) => env.id === Number(id)) || envelopeData[0];
-    }, [id]);
+    // Animation value for flap rotation
+    const flapAnim = useRef(new Animated.Value(0)).current;
 
-    const senderName = envelope.sender || "Anonymous";
-    const amount = "₹2,100";
-    const message =
-        envelope.message ||
-        "Wishing you joy, prosperity and a blessed future together.";
-
-    const handleBack = () => {
-        navigation.goBack();
-    };
-
-    const handleSendThanks = () => {
-        setThanksSent(true);
-        setShowDialog(false);
-
-        Toast.show({
-            type: "success",
-            text1: "Thanks sent!",
-            text2: `Your message has been delivered to ${senderName}`,
-            position: "top",
-            visibilityTime: 2000,
-            autoHide: true,
+    const openEnvelope = () => {
+        Animated.timing(flapAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+        }).start(() => {
+            setOpened(true);
+            setShowDialog(true);
         });
     };
 
+    // Interpolated flap rotation
+    const flapRotate = flapAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ["0deg", "-90deg"], // flap rotates upwards to reveal envelope
+    });
+
     return (
-        <AppLayout>
+        <PaperProvider>
             <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={22} color="#fff" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Gift Envelope</Text>
-            </View>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Icon name="arrow-left" size={24} color="#1B2A49" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Gift Envelope</Text>
+                </View>
 
-            {/* Main Content */}
-            <View style={styles.content}>
-                <Text style={styles.subText}>You received a gift from</Text>
-                <Text style={styles.senderName}>{senderName}</Text>
+                {/* Sender info */}
+                <View style={styles.senderContainer}>
+                    <Text style={styles.senderLabel}>You received a gift from</Text>
+                    <Text style={styles.senderName}>{envelope.sender}</Text>
+                </View>
 
-                <TouchableOpacity
-                    style={styles.envelopeCard}
-                    onPress={() => setShowDialog(true)}
-                >
-                    <Ionicons name="gift" size={40} color="#FF6600" />
-                    <Text style={styles.amount}>{amount}</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Dialog simulation */}
-            {showDialog && (
-                <View style={styles.dialog}>
-                    <Text style={styles.dialogTitle}>Gift from {senderName}</Text>
-                    <Text style={styles.dialogText}>{message}</Text>
-                    <Text style={styles.dialogAmount}>{amount}</Text>
-
-                    {!thanksSent ? (
-                        <TouchableOpacity style={styles.btn} onPress={handleSendThanks}>
-                            <Text style={styles.btnText}>Send Thanks 🙏</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <Text style={{ color: "green", marginTop: 10 }}>
-                            Thanks already sent ✔
-                        </Text>
-                    )}
-
+                {/* Envelope */}
+                <View style={styles.envelopeWrapper}>
                     <TouchableOpacity
-                        style={[styles.btn, { backgroundColor: "#999" }]}
-                        onPress={() => setShowDialog(false)}
+                        activeOpacity={0.9}
+                        onPress={openEnvelope}
+                        disabled={opened}
                     >
-                        <Text style={styles.btnText}>Close</Text>
+                        <View style={styles.envelopeShadow}>
+                            <Animated.View
+                                style={[
+                                    styles.envelopeFlap,
+                                    {
+                                        transform: [{ rotateX: flapRotate }],
+                                    },
+                                ]}
+                            />
+                            <View style={styles.envelopeBody}>
+                                {opened ? (
+                                    <View style={styles.amountCard}>
+                                        <Icon name="currency-inr" size={26} color="#FF8D00" />
+                                        <Text style={styles.amountText}>{envelope.amount}</Text>
+                                        <Text style={styles.amountLabel}>Gift Amount</Text>
+                                    </View>
+                                ) : (
+                                    <Text style={styles.tapText}>Tap to open</Text>
+                                )}
+                            </View>
+                        </View>
                     </TouchableOpacity>
                 </View>
-            )}
-        </View>
-        </AppLayout>
+
+                {/* Gift message dialog */}
+                <Portal>
+                    <Dialog
+                        visible={showDialog}
+                        onDismiss={() => setShowDialog(false)}
+                        style={styles.dialog}
+                    >
+                        <Dialog.Title style={styles.dialogTitle}>Auspicious Gift</Dialog.Title>
+                        <Dialog.Content style={styles.dialogContent}>
+                            <Icon
+                                name="gift-outline"
+                                size={40}
+                                color="#FF8D00"
+                                style={{ marginBottom: 12 }}
+                            />
+                            <View style={styles.dialogAmountCard}>
+                                <Icon name="currency-inr" color="#FF8D00" size={22} />
+                                <Text style={styles.dialogAmountText}>{envelope.amount}</Text>
+                            </View>
+                            <Text style={styles.message}>{envelope.message}</Text>
+                            <Text style={styles.fromText}>From: {envelope.sender}</Text>
+                        </Dialog.Content>
+                        <Dialog.Actions style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+                            <Button
+                                mode="contained"
+                                onPress={() => {
+                                    setThanksSent(true);
+                                    setShowDialog(false);
+                                }}
+                                disabled={thanksSent}
+                                style={styles.thanksButton}
+                                labelStyle={styles.thanksLabel}
+                            >
+                                {thanksSent ? "Thanks Sent!" : "Send Thanks"}
+                            </Button>
+                        </Dialog.Actions>
+                    </Dialog>
+                </Portal>
+            </View>
+        </PaperProvider>
     );
 };
 
-export default EnvelopeView;
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#fff" },
+    container: { flex: 1, backgroundColor: "#FEF9E7" },
     header: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#003366",
-        padding: 14,
+        paddingHorizontal: 12,
+        paddingTop: 16,
+        paddingBottom: 20,
     },
-    backBtn: { marginRight: 10 },
-    headerTitle: { color: "#fff", fontSize: 18, fontWeight: "600" },
-    content: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-    },
-    subText: { fontSize: 14, color: "#800000" },
-    senderName: {
-        fontSize: 20,
+    headerTitle: {
+        color: "#1B2A49",
         fontWeight: "700",
-        color: "#003366",
-        marginVertical: 8,
+        fontSize: 20,
+        marginLeft: 12,
     },
-    envelopeCard: {
-        backgroundColor: "#fff9e6",
-        padding: 20,
-        borderRadius: 12,
-        alignItems: "center",
-        marginTop: 30,
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 6,
+    senderContainer: { alignItems: "center", marginVertical: 40 },
+    senderLabel: { color: "#8B3510", fontSize: 14, marginBottom: 6 },
+    senderName: { color: "#1B2A49", fontWeight: "700", fontSize: 24 },
+    envelopeWrapper: { flex: 1, justifyContent: "center", alignItems: "center" },
+    envelopeShadow: {
+        width: width * 0.7,
+        height: 180,
+        backgroundColor: "#FFD966",
+        borderRadius: 16,
+        shadowColor: "#d38500",
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.5,
+        shadowRadius: 15,
+        elevation: 10,
+        overflow: "hidden",
     },
-    amount: { fontSize: 18, color: "#FF6600", marginTop: 8 },
-    dialog: {
+    envelopeFlap: {
         position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: "#fff",
-        padding: 20,
+        top: 0,
+        width: "100%",
+        height: 90,
+        backgroundColor: "#FFAB40",
+        borderBottomWidth: 2,
+        borderColor: "#d38500",
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 6,
+        backfaceVisibility: "hidden",
+        zIndex: 10,
     },
-    dialogTitle: { fontSize: 18, fontWeight: "700", color: "#003366" },
-    dialogText: { fontSize: 14, marginVertical: 8, color: "#333" },
-    dialogAmount: { fontSize: 20, fontWeight: "bold", color: "#FF6600" },
-    btn: {
-        backgroundColor: "#FF6600",
-        padding: 12,
-        borderRadius: 8,
-        marginTop: 12,
+    envelopeBody: {
+        flex: 1,
+        justifyContent: "center",
         alignItems: "center",
     },
-    btnText: { color: "#fff", fontWeight: "600" },
+    amountCard: {
+        alignItems: "center",
+        backgroundColor: "#FFFDED",
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 30,
+        shadowColor: "#F8B500",
+        shadowOffset: { width: 0, height: 0 },
+        shadowRadius: 15,
+        shadowOpacity: 0.5,
+        elevation: 8,
+    },
+    amountText: {
+        fontSize: 28,
+        color: "#1B2A49",
+        fontWeight: "800",
+        marginBottom: 6,
+    },
+    amountLabel: {
+        fontSize: 14,
+        color: "#8B3510",
+    },
+    tapText: {
+        marginTop: 10,
+        backgroundColor: "white",
+        paddingVertical: 5,
+        paddingHorizontal: 14,
+        borderRadius: 12,
+        color: "#1B2A49",
+        fontWeight: "600",
+        fontSize: 14,
+    },
+    dialog: {
+        backgroundColor: "#FFF7DC",
+        borderRadius: 20,
+        marginHorizontal: 16,
+    },
+    dialogTitle: {
+        color: "#8B3510",
+        fontWeight: "700",
+        fontSize: 22,
+        textAlign: "center",
+        paddingBottom: 8,
+    },
+    dialogContent: {
+        alignItems: "center",
+    },
+    dialogAmountCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFFDED",
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        marginBottom: 16,
+        shadowColor: "#F8B500",
+        shadowOffset: { width: 0, height: 0 },
+        shadowRadius: 12,
+        shadowOpacity: 0.4,
+        elevation: 5,
+    },
+    dialogAmountText: {
+        fontWeight: "700",
+        fontSize: 26,
+        color: "#1B2A49",
+        marginLeft: 10,
+    },
+    message: {
+        fontSize: 14,
+        textAlign: "center",
+        color: "#1B2A49",
+        marginBottom: 8,
+        paddingHorizontal: 10,
+    },
+    fromText: {
+        fontSize: 12,
+        color: "#346A7C",
+    },
+    thanksButton: {
+        width: "100%",
+        backgroundColor: "#FF9F00",
+        borderRadius: 12,
+    },
+    thanksLabel: {
+        fontWeight: "700",
+    },
 });
+
+export default EnvelopeView;

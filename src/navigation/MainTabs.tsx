@@ -6,9 +6,9 @@ import CustomTabBar from "../components/CustomTabBar";
 // Screens
 import HomeScreen from "../screens/HomeScreen";
 import ProfileScreen from "../screens/Profile/ProfileScreen";
-import ChatScreen from "../screens/ChatScreen";
 import ScannerScreen from "../screens/ScannerScreen";
 import GiftsScreen from "../screens/GiftsScreen";
+import ChatStackNavigator from "./ChatStackNavigator";
 
 export type TabParamList = {
     Home: undefined;
@@ -78,9 +78,10 @@ export default function MainTabs() {
                     ),
                 }}
             />
+            {/* ✅ CHAT STACK INSIDE TAB */}
             <Tab.Screen
                 name="Chat"
-                component={ChatScreen}
+                component={ChatStackNavigator}
                 options={{
                     tabBarLabel: "Chat",
                     tabBarIcon: ({ focused, color, size }) => (

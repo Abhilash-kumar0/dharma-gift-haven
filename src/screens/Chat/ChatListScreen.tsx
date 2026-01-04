@@ -1,9 +1,35 @@
 import React from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
+import { ChatStackParamList } from "../../navigation/types";
 
+/* ---------------- TYPES ---------------- */
 
-const conversations = [
+type ChatListNavProp = NativeStackNavigationProp<
+  ChatStackParamList,
+  "ChatList"
+>;
+
+type Conversation = {
+  id: string;
+  name: string;
+  lastMessage: string;
+  time: string;
+  unread: number;
+  isGroup?: boolean;
+};
+
+/* ---------------- DUMMY DATA ---------------- */
+
+const conversations: Conversation[] = [
   {
     id: "1",
     name: "Festival Group",
@@ -49,19 +75,22 @@ const conversations = [
   },
 ];
 
-export default function ChatScreen({ navigation }) {
+/* ---------------- SCREEN ---------------- */
+
+export default function ChatListScreen() {
+  const navigation = useNavigation<ChatListNavProp>();
+
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFDF5" }}>
-
-      {/* Header */}
+      {/* Header (NO BACK BUTTON – TAB ROOT) */}
       <View style={{ flexDirection: "row", alignItems: "center", padding: 20 }}>
-        <Ionicons
-          name="arrow-back"
-          size={24}
-          color="#000080"
-          onPress={() => navigation.goBack()}
-        />
-        <Text style={{ fontSize: 26, fontWeight: "700", color: "#000080", marginLeft: 15 }}>
+        <Text
+          style={{
+            fontSize: 26,
+            fontWeight: "700",
+            color: "#000080",
+          }}
+        >
           Messages
         </Text>
 
@@ -115,7 +144,13 @@ export default function ChatScreen({ navigation }) {
               borderBottomWidth: 1,
               borderBottomColor: "#F2EEDA",
             }}
-            onPress={() => navigation.navigate("ChatDetail", { chatId: item.id })}
+            onPress={() =>
+              navigation.navigate("ChatConversation", {
+                chatId: item.id,
+                isGroup: item.isGroup,
+                title: item.name,
+              })
+            }
           >
             {/* Avatar */}
             <View
@@ -145,7 +180,13 @@ export default function ChatScreen({ navigation }) {
             {/* Text Area */}
             <View style={{ flex: 1, marginLeft: 15 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={{ fontSize: 17, fontWeight: "600", color: "#000070" }}>
+                <Text
+                  style={{
+                    fontSize: 17,
+                    fontWeight: "600",
+                    color: "#000070",
+                  }}
+                >
                   {item.name}
                 </Text>
 
@@ -166,12 +207,16 @@ export default function ChatScreen({ navigation }) {
                 )}
               </View>
 
-              <Text style={{ color: "#5A5A5A", marginTop: 2 }}>{item.lastMessage}</Text>
+              <Text style={{ color: "#5A5A5A", marginTop: 2 }}>
+                {item.lastMessage}
+              </Text>
             </View>
 
             {/* Right side */}
             <View style={{ alignItems: "flex-end" }}>
-              <Text style={{ fontSize: 12, color: "#6B6B6B" }}>{item.time}</Text>
+              <Text style={{ fontSize: 12, color: "#6B6B6B" }}>
+                {item.time}
+              </Text>
 
               {item.unread > 0 && (
                 <View
@@ -185,7 +230,9 @@ export default function ChatScreen({ navigation }) {
                     marginTop: 8,
                   }}
                 >
-                  <Text style={{ color: "white", fontSize: 12 }}>{item.unread}</Text>
+                  <Text style={{ color: "white", fontSize: 12 }}>
+                    {item.unread}
+                  </Text>
                 </View>
               )}
             </View>
@@ -195,4 +242,3 @@ export default function ChatScreen({ navigation }) {
     </View>
   );
 }
-  
